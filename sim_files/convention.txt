@@ -1,0 +1,5 @@
+check_Li_j --> i = likelihood, j = noise iteration
+    |
+    |
+    V
+results_Li_j (output)
