@@ -1,0 +1,5 @@
+data\COMBINED_FDM_cat.csv contains the combined catalog of all 3 datasets
+
+kmos3d -- lines 2-74
+kross --  lines 75-243
+kges -- lines  244-264

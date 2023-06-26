@@ -1,0 +1,6 @@
+paper tfr z m errm b errb sig errsig
+Reyes2011 STFR 0 3.59 0.01 2.39 0.01 2.34 0.34
+Lapi2018 STFR 0 3.67 0.23 2.41 0.1 2.79 0.51
+ETD16 STFR 1 3.8 0.21 1.88 0.46 2.34 0.33		
+Ubler2017 STFR 1 3.6 0.01 1.92 0.01 2.38 0.32								
+AT2019a STFR 1 3.7 0.3 1.98 0.1 2.22 0.27

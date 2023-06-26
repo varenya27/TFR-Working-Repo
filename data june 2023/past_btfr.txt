@@ -1,0 +1,5 @@
+paper tfr z m errm b errb sig errsig
+Lelli2019 BTFR 0 3.85 0.09 1.99 0.18 0.026 0.007
+Papastergis2016 BTFR 0 3.58 0.11 2.33 0.013 0 0
+Ubler2017 BTFR 2.6 3.75 0 2.18 0.03 0.23
+Goddy2023 BTFR 0 2.97 0.18 4.04 0.41 0
