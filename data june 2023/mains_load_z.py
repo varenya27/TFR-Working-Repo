@@ -1,9 +1,10 @@
 '''
 run mcmc to find best fit params given the data using L1 and L2
 '''
-# data = ['KMOS3D', 'KROSS','KGES','COMBINED']
-data = ['KMOS3D','KROSS', 'KGES','COMBINED']
-
+data = ['COMBINED']
+L=data[0]
+fres = open('results_STFR.csv','w')
+fres.write('data,m,m_err,b,b_err,intscat,intscat_err,1sigma,2sigma,3sigma\n')
 import numpy as np
 from matplotlib import pyplot as plt# import pyplot from matplotlib
 import corner
@@ -14,17 +15,16 @@ plt.rcParams['font.family'] = 'DeJavu Serif'
 plt.rcParams['mathtext.fontset'] = 'stixsans'
 plt.rcParams['mathtext.default'] = 'regular'
 
-fres = open('results_BTFR.csv','w')
-fres.write('data,m,m_err,b,b_err,intscat,intscat_err,1sigma,2sigma,3sigma\n')
-
 def straight_line(theta,x):
     y=theta[0]*x + theta[1]
     return y
-
+    
 for L in data:
     f = 'data/'+L+'_FDM_cat.csv' 
 
     df = pd.read_csv(f)
+    df=df.drop(df[df.Redshift>1].index)
+
     VRout,VRout_err,Mbar_Rout,Mbar_Rout_err,Mstar_Rout,Mstar_Rout_err = df.VRout.to_numpy(),df.VRout_err.to_numpy(),df.Mbar_Rout.to_numpy(),df.Mbar_Rout_err.to_numpy(),df.Mstar_Rout.to_numpy(),df.Mstar_Rout_err.to_numpy()
     Mgas_Rout,Mgas_Rout_err = Mbar_Rout-Mstar_Rout,Mbar_Rout_err-Mstar_Rout_err 
     logMbar = np.log10(Mbar_Rout)
@@ -34,7 +34,7 @@ for L in data:
     logMstar_err = Mstar_Rout_err/(2.303*Mstar_Rout)
     logVRout_err = VRout_err/(2.303*VRout)
 
-    y, err_y, x, err_x= logMbar,logMbar_err,logVRout,logVRout_err
+    y, err_y, x, err_x= logMstar,logMstar_err,logVRout,logVRout_err
 
 
     Nens = 300 # number of ensemble points
@@ -43,7 +43,7 @@ for L in data:
     Nsamples = 3000  #500 # number of final posterior samples
 
 
-    FF = open(f"pickle/sampler_{L}_BTFR.pkl", "rb")
+    FF = open(f"sampler_{L}_STFR_zless1.pkl", "rb")
     flat_samples = pickle.load(FF)
 
     m_final = np.percentile(flat_samples[:, 0], [16, 50, 84])[1]
@@ -61,11 +61,11 @@ for L in data:
         labels=[r"m", r"b", r"$\sigma_{{int}}$"], 
         # quantiles=[0.16,0.84], 
         range=
-            [(1,6),(-4,7),(-0.02,0.16)] if L=='KMOS3D'
-            else([(0.7,1.5), (6.8,8.4), (-0.01,0.1)] if L=='KROSS'
-            else([(0.,7), (-4,10), (-0.04,0.2)] if L == 'KGES' 
-            else [(1,4), (2.5,7), (-0.02,0.08)]
-            )),
+                [(0.7,6), (-3,8), (-0.03,0.21)] if L=='KMOS3D'
+            else([(1,4), (2,7.2), (-0.02,0.1)] if L=='KROSS'
+            else([(0.,7), (-4,8.5), (-0.05,0.35)] if L == 'KGES'
+                 else([(1,3.8), (2.6,7), (-0.02,0.07)])
+            )),        
         show_titles=True, 
         label_kwargs={"fontsize": 16},
         title_kwargs={"fontsize": 14},
@@ -86,7 +86,7 @@ for L in data:
             ax.scatter(Med_value[xi], Med_value[yi], color=axis_color)
 
 
-    figure.savefig(f'figures/corner{L}_BTFR.png',format='png', dpi=300)
+    figure.savefig(f'corner{L}_STFR.png',format='png', dpi=300)
     # figure = corner.corner(samples, levels=(1.-np.exp(-0.5), 1.-np.exp(-2.0)), labels=[r"Slope", r"Intercept", r"Intrinsic Scatter", r"Intrinsic Scatter"], quantiles=[0.16,0.84], show_titles=True, label_kwargs={"fontsize": 12}, title_kwargs={"fontsize": 10}, range=[(a_ML-0.4,a_ML+0.4), (b_ML-0.6,b_ML+0.6), (s_ML-0.1,s_ML+0.1)])
 
     line,hi,lo=[],[],[]
@@ -101,9 +101,10 @@ for L in data:
         line.append(mcmc[1])
         hi.append(q[0])
         lo.append(q[1])
-
     fres.write(f'{L},{line[0]},{(hi[0]+lo[0])/2},{line[1]},{(hi[1]+lo[1])/2},{line[2]},{(hi[2]+lo[2])/2},{line[2]*np.sqrt(line[0]**2+1)},{2*line[2]*np.sqrt(line[0]**2+1)},{3*line[2]*np.sqrt(line[0]**2+1)}\n')
-
+        # display(Math(txt))
+    # with open('results.txt','a') as f:
+    #     f.write(results)
     plt.figure(figsize=(9,7))
 
     #bestfit with errors on m,c
@@ -130,7 +131,7 @@ for L in data:
     # b_past_btfr = zero_past_btfr
 
 
-    df = pd.read_csv('past_btfr.txt',sep=' ')
+    df = pd.read_csv('past_stfr.txt',sep=' ')
     paper_btfr = df['paper']
     m_past_btfr=df['m'].to_numpy()
     b_past_btfr=df['b'].to_numpy()
@@ -147,7 +148,7 @@ for L in data:
     plt.xlim(min(x)-0.5,max(x)+0.5)
     X,Y= x,y
     Xerr,Yerr =err_x, err_y
-    Y1,Y1_e,X1,X1_e = logMbar,logMbar_err,logVRout,logVRout_err
+    Y1,Y1_e,X1,X1_e = logMstar,logMstar_err,logVRout,logVRout_err
     # Y1,Y1_e,X1,X1_e = logMbar_sers,logMbar_err_sers,logVRout,logVRout_err
     plt.errorbar(X1, Y1,Y1_e,X1_e, alpha=0.5, fmt='h', ms=5, mfc='white',color='#242424', mew=1, ecolor='grey', capsize=2.0, zorder=0, label='Individual Data');
     # plt.errorbar(X1, Y1, fmt='o', ms=5, color='orange', mfc='orange', mew=1, ecolor='gray', alpha=0.5, capsize=2.0, zorder=0, label='Individual Data');
@@ -155,15 +156,16 @@ for L in data:
     # plt.errorbar(X, Y, fmt='h', ms=12, color='orangered', mfc='none', mew=1, ecolor='gray', alpha=1, capsize=2.0, zorder=6);
     plt.scatter(X1, Y1,c=Mgas_Rout/Mbar_Rout,marker='H',cmap='magma',edgecolors='#242424',alpha=0.75, )
     # plt.colorbar(label='$R_e$')
-    plt.colorbar(label='$f_{gas}$')
+    plt.colorbar(label='$f_{gas}$' if True else '$R_e$')
     plt.tick_params(direction='inout', length=7, width=2)
     plt.yticks(fontsize=10)
     plt.xticks(fontsize=10)
     plt.title('m={}, b={}'.format(round(line[0],2),round(line[1],2)))
-    plt.xlabel('$log V_{R_{out}}$')
-    ylabel = '$log M_{bar}$'
+    plt.xlabel('$\log V_{R_{out}}$')
+    ylabel = '$\log M_{star}$'
     plt.ylabel(ylabel)
     # plt.legend(bbox_to_anchor=(0., 1.01, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.,fontsize=11 )
     plt.legend()
-    plt.title(f'Data: {L} | BTFR')
-    plt.savefig(f'figures/besfit{L}_BTFR.png')
+    plt.title(f'Data: {L} | STFR')
+    plt.savefig(f'besfit{L}_STFR.png')
+    # plt.show()

@@ -2,7 +2,7 @@
 run mcmc to find best fit params given the data using L1 and L2
 '''
 # data = ['KMOS3D', 'KROSS','KGES','COMBINED']
-data = ['KMOS3D','KROSS', 'KGES','COMBINED']
+data = ['COMBINED']
 
 import numpy as np
 from matplotlib import pyplot as plt# import pyplot from matplotlib
@@ -25,13 +25,14 @@ for L in data:
     f = 'data/'+L+'_FDM_cat.csv' 
 
     df = pd.read_csv(f)
-    VRout,VRout_err,Mbar_Rout,Mbar_Rout_err,Mstar_Rout,Mstar_Rout_err = df.VRout.to_numpy(),df.VRout_err.to_numpy(),df.Mbar_Rout.to_numpy(),df.Mbar_Rout_err.to_numpy(),df.Mstar_Rout.to_numpy(),df.Mstar_Rout_err.to_numpy()
-    Mgas_Rout,Mgas_Rout_err = Mbar_Rout-Mstar_Rout,Mbar_Rout_err-Mstar_Rout_err 
-    logMbar = np.log10(Mbar_Rout)
-    logMstar = np.log10(Mstar_Rout)
+    df=df.drop(df[df.Redshift>1].index)
+    VRout,VRout_err,Mbar,Mbar_err,Mstar,Mstar_err = df.VRout.to_numpy(),df.VRout_err.to_numpy(),df.Mbar.to_numpy(),df.Mbar_err.to_numpy(),df.Mstar.to_numpy(),df.Mstar_err.to_numpy()
+    Mgas,Mgas_err = Mbar-Mstar,Mbar_err-Mstar_err 
+    logMbar = np.log10(Mbar)
+    logMstar = np.log10(Mstar)
     logVRout = np.log10(VRout)
-    logMbar_err = Mbar_Rout_err/(2.303*Mbar_Rout)
-    logMstar_err = Mstar_Rout_err/(2.303*Mstar_Rout)
+    logMbar_err = Mbar_err/(2.303*Mbar)
+    logMstar_err = Mstar_err/(2.303*Mstar)
     logVRout_err = VRout_err/(2.303*VRout)
 
     y, err_y, x, err_x= logMbar,logMbar_err,logVRout,logVRout_err
@@ -43,7 +44,7 @@ for L in data:
     Nsamples = 3000  #500 # number of final posterior samples
 
 
-    FF = open(f"pickle/sampler_{L}_BTFR.pkl", "rb")
+    FF = open(f"sampler_COMBINED_BTFR_zless1.pkl", "rb")
     flat_samples = pickle.load(FF)
 
     m_final = np.percentile(flat_samples[:, 0], [16, 50, 84])[1]
@@ -60,12 +61,12 @@ for L in data:
         levels=(0.68,0.90,0.99), 
         labels=[r"m", r"b", r"$\sigma_{{int}}$"], 
         # quantiles=[0.16,0.84], 
-        range=
-            [(1,6),(-4,7),(-0.02,0.16)] if L=='KMOS3D'
-            else([(0.7,1.5), (6.8,8.4), (-0.01,0.1)] if L=='KROSS'
-            else([(0.,7), (-4,10), (-0.04,0.2)] if L == 'KGES' 
-            else [(1,4), (2.5,7), (-0.02,0.08)]
-            )),
+        # range=
+        #     [(1,6),(-4,7),(-0.02,0.16)] if L=='KMOS3D'
+        #     else([(0.7,1.5), (6.8,8.4), (-0.01,0.1)] if L=='KROSS'
+        #     else([(0.,7), (-4,10), (-0.04,0.2)] if L == 'KGES' 
+        #     else [(1,4), (2.5,7), (-0.02,0.08)]
+        #     )),
         show_titles=True, 
         label_kwargs={"fontsize": 16},
         title_kwargs={"fontsize": 14},
@@ -102,7 +103,6 @@ for L in data:
         hi.append(q[0])
         lo.append(q[1])
 
-    fres.write(f'{L},{line[0]},{(hi[0]+lo[0])/2},{line[1]},{(hi[1]+lo[1])/2},{line[2]},{(hi[2]+lo[2])/2},{line[2]*np.sqrt(line[0]**2+1)},{2*line[2]*np.sqrt(line[0]**2+1)},{3*line[2]*np.sqrt(line[0]**2+1)}\n')
 
     plt.figure(figsize=(9,7))
 
@@ -128,6 +128,7 @@ for L in data:
 
     # paper_btfr,btfr,z_btfr,m_past_btfr,zero_past_btfr,chi_btfr,int_scat_past_btfr = np.loadtxt('past_btfr.txt',unpack=True)
     # b_past_btfr = zero_past_btfr
+    fres.write(f'{L},{line[0]},{(hi[0]+lo[0])/2},{line[1]},{(hi[1]+lo[1])/2},{line[2]},{(hi[2]+lo[2])/2},{scat},{2*scat},{3*scat}\n')
 
 
     df = pd.read_csv('past_btfr.txt',sep=' ')
@@ -153,7 +154,7 @@ for L in data:
     # plt.errorbar(X1, Y1, fmt='o', ms=5, color='orange', mfc='orange', mew=1, ecolor='gray', alpha=0.5, capsize=2.0, zorder=0, label='Individual Data');
     # plt.errorbar(X, Y, xerr=Xerr, yerr=Yerr, fmt='h', ms=10, color='orangered', mfc='orange', mew=1, ecolor='gray', alpha=1, capsize=2.0, zorder=5, label='Binned Data');
     # plt.errorbar(X, Y, fmt='h', ms=12, color='orangered', mfc='none', mew=1, ecolor='gray', alpha=1, capsize=2.0, zorder=6);
-    plt.scatter(X1, Y1,c=Mgas_Rout/Mbar_Rout,marker='H',cmap='magma',edgecolors='#242424',alpha=0.75, )
+    plt.scatter(X1, Y1,c=Mgas/Mbar,marker='H',cmap='magma',edgecolors='#242424',alpha=0.75, )
     # plt.colorbar(label='$R_e$')
     plt.colorbar(label='$f_{gas}$')
     plt.tick_params(direction='inout', length=7, width=2)
@@ -167,3 +168,4 @@ for L in data:
     plt.legend()
     plt.title(f'Data: {L} | BTFR')
     plt.savefig(f'figures/besfit{L}_BTFR.png')
+    plt.show()

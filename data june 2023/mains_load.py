@@ -116,10 +116,14 @@ for L in data:
     x_line=np.linspace(min(x)-0.5,max(x)+0.5)
     x_line=np.linspace(min(x)-0.5,max(x)+0.5)
     y_line = line[0]*x_line+line[1]
+    y_fit =[]
+    for n in range(len(x)):
+        y_fit.append(np.interp(x[n],x_line,y_line))
+    scat = np.sqrt(np.median((y-np.array(y_fit))**2))
     plt.plot(x_line, y_line,'-',color='#303030',linewidth=4,label=f'y={round(line[0],2)}x+{round(line[1],2)}')
-    plt.plot(x_line, y_line+( 3*line[2]*np.sqrt(line[0]**2+1) ) ,'--',color='#303030')
-    plt.plot(x_line, y_line-( 3*line[2]*np.sqrt(line[0]**2+1) ),'--',color='#303030')
-    plt.fill_between (x_line, y_line+( 3*line[2]*np.sqrt(line[0]**2+1) ), y_line-( 3*line[2]*np.sqrt(line[0]**2+1) ), color='#b3a4a4', hatch='\\\\\\\\', alpha=0.5, zorder=0, label='3$\sigma$ scatter')
+    plt.plot(x_line, y_line+( 3*scat ) ,'--',color='#303030')
+    plt.plot(x_line, y_line-( 3*scat ),'--',color='#303030')
+    plt.fill_between (x_line, y_line+( 3*scat ), y_line-( 3*scat ), color='#b3a4a4', hatch='\\\\\\\\', alpha=0.5, zorder=0, label='3$\sigma$ scatter')
 
     # paper_btfr,btfr,z_btfr,m_past_btfr,zero_past_btfr,chi_btfr,int_scat_past_btfr = np.loadtxt('past_btfr.txt',unpack=True)
     # b_past_btfr = zero_past_btfr
